@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NEXUS — Contacts & Agenda IA | coul-contact.net</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/static/css/nexus.css"/>
+</head>
+<body>
+<!-- ═══════════════ SIDEBAR ═══════════════ -->
+<aside id="sidebar">
+  <div class="logo">
+    <span class="logo-hex">⬡</span>
+    <span class="logo-text">NEXUS</span>
+    <span class="logo-badge">IA</span>
+  </div>
+  <nav class="nav">
+    <button class="nav-btn active" data-view="dashboard">
+      <span class="nav-icon">🏠</span><span>Tableau de bord</span>
+    </button>
+    <button class="nav-btn" data-view="contacts">
+      <span class="nav-icon">👥</span><span>Contacts</span>
+    </button>
+    <button class="nav-btn" data-view="agenda">
+      <span class="nav-icon">📅</span><span>Agenda</span>
+    </button>
+    <button class="nav-btn" data-view="messages">
+      <span class="nav-icon">💬</span><span>Messages</span>
+    </button>
+    <button class="nav-btn" data-view="ai">
+      <span class="nav-icon">🧠</span><span>Assistant IA</span>
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="nav-btn" data-view="settings">
+      <span class="nav-icon">⚙️</span><span>Paramètres</span>
+    </button>
+    <div class="ai-status" id="aiStatus">
+      <span class="status-dot"></span><span>NEXUS IA</span>
+    </div>
+  </div>
+</aside>
+
+<!-- ═══════════════ MAIN ═══════════════ -->
+<main id="main">
+
+  <!-- ─── DASHBOARD ─── -->
+  <section id="view-dashboard" class="view active">
+    <header class="page-header">
+      <div>
+        <h1 id="dashGreeting">Bonjour !</h1>
+        <p id="dashDate" class="sub"></p>
+      </div>
+    </header>
+    <div class="dash-stats" id="dashStats"></div>
+    <div class="dash-grid">
+      <div class="dash-card" id="dashEvents">
+        <h3 class="card-title"><span>📅</span> Événements du jour</h3>
+        <div id="dashEventsList"></div>
+      </div>
+      <div class="dash-card" id="dashContacts">
+        <h3 class="card-title"><span>👥</span> Contacts récents</h3>
+        <div id="dashContactsList"></div>
+      </div>
+    </div>
+    <div class="quick-actions">
+      <h3 class="card-title"><span>✨</span> Actions rapides</h3>
+      <div class="qa-grid">
+        <button class="qa-btn accent" onclick="App.nav('contacts'); setTimeout(()=>document.getElementById('btnNewContact').click(),300)">➕ Nouveau contact</button>
+        <button class="qa-btn purple" onclick="App.nav('agenda'); setTimeout(()=>document.getElementById('btnNewEvent').click(),300)">📅 Planifier</button>
+        <button class="qa-btn green" onclick="App.nav('messages')">💬 Envoyer message</button>
+        <button class="qa-btn orange" onclick="App.nav('ai')">🧠 Demander à l'IA</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── CONTACTS ─── -->
+  <section id="view-contacts" class="view">
+    <header class="page-header">
+      <h1>👥 Contacts</h1>
+      <div class="header-actions">
+        <div class="search-box">
+          <input id="contactSearch" type="text" placeholder="🔍 Rechercher…" oninput="Contacts.search(this.value)"/>
+          <button class="btn-ai-search" onclick="Contacts.aiSearch()" title="Recherche IA">🧠 IA</button>
+        </div>
+        <button id="btnNewContact" class="btn-primary" onclick="Contacts.openForm()">➕ Nouveau</button>
+      </div>
+    </header>
+    <div class="contacts-layout">
+      <aside class="groups-panel">
+        <p class="panel-label">Groupes</p>
+        <div id="groupsList"></div>
+      </aside>
+      <div class="contacts-list-wrap">
+        <div id="contactsList" class="contacts-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── AGENDA ─── -->
+  <section id="view-agenda" class="view">
+    <header class="page-header">
+      <h1>📅 Agenda</h1>
+      <button id="btnNewEvent" class="btn-primary" onclick="Agenda.openForm()">➕ Événement</button>
+    </header>
+    <div class="agenda-layout">
+      <div class="calendar-wrap">
+        <div class="cal-nav">
+          <button onclick="Agenda.prevMonth()">◀</button>
+          <span id="calMonth"></span>
+          <button onclick="Agenda.nextMonth()">▶</button>
+        </div>
+        <div class="cal-days-header">
+          <span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span><span>Sam</span><span>Dim</span>
+        </div>
+        <div id="calGrid" class="cal-grid"></div>
+      </div>
+      <div class="day-events-wrap">
+        <div class="day-header">
+          <span id="selectedDayLabel"></span>
+          <button class="btn-sm" onclick="Agenda.openForm(null, Agenda.selectedDate)">+</button>
+        </div>
+        <div id="dayEventsList" class="day-events-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── MESSAGES ─── -->
+  <section id="view-messages" class="view">
+    <header class="page-header">
+      <h1>💬 Messages</h1>
+      <div class="header-actions">
+        <div class="mode-toggle">
+          <button id="btnModeIndiv" class="mode-btn active" onclick="Messages.setMode('individual')">Individuel</button>
+          <button id="btnModeGroup" class="mode-btn" onclick="Messages.setMode('group')">Groupé</button>
+        </div>
+        <button class="btn-ai-search" onclick="Messages.openAIGenerator()">🧠 IA</button>
+        <button class="btn-primary" onclick="Messages.send()">📤 Envoyer</button>
+      </div>
+    </header>
+    <div class="messages-layout">
+      <div class="msg-contacts-panel">
+        <input id="msgSearch" type="text" placeholder="🔍 Rechercher…" oninput="Messages.filterContacts(this.value)"/>
+        <div id="msgContactsList" class="msg-contacts-list"></div>
+      </div>
+      <div class="msg-compose-panel" id="msgComposePanel">
+        <div class="msg-empty">
+          <p>💬</p><p>Sélectionnez un contact<br>pour envoyer un message</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── AI ─── -->
+  <section id="view-ai" class="view">
+    <header class="page-header">
+      <h1>🧠 Assistant NEXUS IA</h1>
+      <div class="header-actions">
+        <span class="sub">Propulsé par Claude · Anthropic</span>
+        <button class="btn-outline" onclick="AI.clear()">🗑️ Effacer</button>
+      </div>
+    </header>
+    <div class="ai-layout">
+      <div class="ai-chat-wrap">
+        <div id="aiHistory" class="ai-history"></div>
+        <div class="ai-input-bar">
+          <textarea id="aiInput" placeholder="Posez votre question…" rows="2" onkeydown="AI.onKey(event)"></textarea>
+          <button class="btn-send" onclick="AI.send()">📤</button>
+        </div>
+      </div>
+      <aside class="ai-sidebar">
+        <p class="panel-label">✨ Suggestions rapides</p>
+        <div id="aiSuggestions"></div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ─── SETTINGS ─── -->
+  <section id="view-settings" class="view">
+    <header class="page-header"><h1>⚙️ Paramètres</h1></header>
+    <div class="settings-wrap">
+      <div class="settings-card">
+        <h3>🤖 Configuration IA — Claude API</h3>
+        <p class="sub">Obtenez votre clé sur <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></p>
+        <div class="field-group">
+          <label>Clé API Anthropic</label>
+          <input id="apiKeyInput" type="password" placeholder="sk-ant-…"/>
+        </div>
+        <div class="btn-row">
+          <button class="btn-primary" onclick="Settings.save()">💾 Sauvegarder</button>
+          <button class="btn-outline" onclick="Settings.test()">🔍 Tester</button>
+        </div>
+        <p id="apiStatus" class="api-status"></p>
+      </div>
+      <div class="settings-card">
+        <h3>ℹ️ À propos</h3>
+        <p>NEXUS — Gestionnaire de Contacts & Agenda IA</p>
+        <p class="sub">Version 1.0 · coul-contact.net</p>
+        <p class="sub">Propulsé par Claude (Anthropic) · Flask · SQLite</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ═══════════════ MODALS ═══════════════ -->
+<div id="modalOverlay" class="modal-overlay" onclick="Modal.close()"></div>
+
+<!-- Modal Contact -->
+<div id="modalContact" class="modal">
+  <div class="modal-header">
+    <h2 id="modalContactTitle">Nouveau contact</h2>
+    <button class="modal-close" onclick="Modal.close()">✕</button>
+  </div>
+  <div class="modal-body">
+    <input type="hidden" id="fContactId"/>
+    <div class="form-row">
+      <div class="field-group"><label>Prénom *</label><input id="fPrenom" type="text"/></div>
+      <div class="field-group"><label>Nom *</label><input id="fNom" type="text"/></div>
+    </div>
+    <div class="form-row">
+      <div class="field-group"><label>Téléphone</label><input id="fTel" type="tel" placeholder="+225 …"/></div>
+      <div class="field-group"><label>Téléphone 2</label><input id="fTel2" type="tel"/></div>
+    </div>
+    <div class="field-group"><label>Email</label><input id="fEmail" type="email"/></div>
+    <div class="form-row">
+      <div class="field-group"><label>Adresse</label><input id="fAdresse" type="text"/></div>
+      <div class="field-group"><label>Ville</label><input id="fVille" type="text" value="Abidjan"/></div>
+    </div>
+    <div class="form-row">
+      <div class="field-group"><label>Pays</label><input id="fPays" type="text" value="Côte d'Ivoire"/></div>
+      <div class="field-group"><label>Groupe</label>
+        <select id="fGroupe">
+          <option>Général</option><option>Famille</option><option>Travail</option><option>Amis</option><option>VIP</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-group"><label>Notes</label><textarea id="fNotes" rows="3"></textarea></div>
+    <label class="checkbox-label"><input type="checkbox" id="fFavori"/> ⭐ Marquer comme favori</label>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-outline" onclick="Modal.close()">Annuler</button>
+    <button class="btn-primary" onclick="Contacts.save()">💾 Sauvegarder</button>
+  </div>
+</div>
+
+<!-- Modal Event -->
+<div id="modalEvent" class="modal">
+  <div class="modal-header">
+    <h2 id="modalEventTitle">Nouvel événement</h2>
+    <button class="modal-close" onclick="Modal.close()">✕</button>
+  </div>
+  <div class="modal-body">
+    <input type="hidden" id="fEventId"/>
+    <div class="field-group"><label>Titre *</label><input id="fEvTitre" type="text" placeholder="Ex: Réunion d'équipe"/></div>
+    <div class="form-row">
+      <div class="field-group"><label>Date *</label><input id="fEvDate" type="date"/></div>
+      <div class="field-group"><label>Type</label>
+        <select id="fEvType">
+          <option>Rendez-vous</option><option>Réunion</option><option>Formation</option>
+          <option>Appel</option><option>Anniversaire</option><option>Personnel</option><option>Autre</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field-group"><label>Heure début</label><input id="fEvHdeb" type="time"/></div>
+      <div class="field-group"><label>Heure fin</label><input id="fEvHfin" type="time"/></div>
+    </div>
+    <div class="field-group"><label>Lieu</label><input id="fEvLieu" type="text"/></div>
+    <div class="field-group"><label>Couleur</label>
+      <select id="fEvCouleur">
+        <option value="#4A90D9">🔵 Bleu</option>
+        <option value="#27AE60">🟢 Vert</option>
+        <option value="#E74C3C">🔴 Rouge</option>
+        <option value="#F39C12">🟡 Orange</option>
+        <option value="#9B59B6">🟣 Violet</option>
+      </select>
+    </div>
+    <div class="field-group"><label>Description</label><textarea id="fEvDesc" rows="3"></textarea></div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-outline" onclick="Modal.close()">Annuler</button>
+    <button class="btn-primary" onclick="Agenda.save()">💾 Sauvegarder</button>
+  </div>
+</div>
+
+<!-- Modal AI Message Generator -->
+<div id="modalAIMsg" class="modal">
+  <div class="modal-header">
+    <h2>🤖 Génération de message IA</h2>
+    <button class="modal-close" onclick="Modal.close()">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="field-group"><label>Sujet / Contexte *</label><input id="aiMsgSujet" type="text" placeholder="Ex: Rappel réunion demain 9h"/></div>
+    <div class="field-group"><label>Destinataire</label><input id="aiMsgDest" type="text" placeholder="Ex: Kouamé Assi"/></div>
+    <div class="form-row">
+      <div class="field-group"><label>Type</label>
+        <select id="aiMsgType"><option value="professionnel">Professionnel</option><option value="amical">Amical</option><option value="urgent">Urgent</option><option value="informatif">Informatif</option></select>
+      </div>
+      <div class="field-group"><label>Ton</label>
+        <select id="aiMsgTon"><option value="formel">Formel</option><option value="semi-formel">Semi-formel</option><option value="informel">Informel</option><option value="chaleureux">Chaleureux</option></select>
+      </div>
+    </div>
+    <button class="btn-primary w-full" onclick="Messages.generateAI()" style="margin:12px 0">✨ Générer</button>
+    <div class="field-group"><label>Message généré</label><textarea id="aiMsgResult" rows="5" placeholder="Le message apparaîtra ici…"></textarea></div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-outline" onclick="Modal.close()">Annuler</button>
+    <button class="btn-primary" onclick="Messages.useAIMessage()">📋 Utiliser ce message</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<script src="/static/js/nexus.js"></script>
+</body>
+</html>
